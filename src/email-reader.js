@@ -22,7 +22,7 @@ export async function getThreadsToProcess(){
 
         const threadsList = await gmail.users.threads.list({
             userId: userId,
-            maxResults: 6,
+            maxResults: 60,
             q: `` //has:attachment label:testes in:inbox
         });
 
