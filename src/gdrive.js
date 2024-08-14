@@ -1,7 +1,7 @@
 import { getOAuth2Client } from "./google-auth.js";
 import { google } from 'googleapis';
 import fs from 'fs';
-import { finalizeThread } from "./email-reader.js";
+import { errorThread, finalizeThread } from "./email-reader.js";
 import 'dotenv/config';
 
 const folderIdToUpload = process.env.DRIVE_FOLDER_ID;
@@ -53,34 +53,34 @@ export async function uploadThread(threadId){
     const threadDataFilePath = 'threads/' + threadId + '/thread.json';
     const threadData = JSON.parse(fs.readFileSync(threadDataFilePath));
 
-    const attachmentsToUpload = threadData.attachments.map((attachment) => {
-        return {
-            fileName: attachment.fileName,
-            mimeType: attachment.mimeType,
-            filePath: 'threads/' + threadId + '/' + attachment.fileNameForPath
+    try {
+        const attachmentsToUpload = threadData.attachments.map((attachment) => {
+            return {
+                fileName: attachment.fileName,
+                mimeType: attachment.mimeType,
+                filePath: 'threads/' + threadId + '/' + attachment.fileNameForPath
+            }
+        });
+        const conversationPdfToUpload = {
+            fileName: threadData.snippet,
+            mimeType: 'application/pdf',
+            filePath: 'threads/' + threadId + '/conversation.pdf'
         }
-    });
-    const conversationPdfToUpload = {
-        fileName: threadData.snippet,
-        mimeType: 'application/pdf',
-        filePath: 'threads/' + threadId + '/conversation.pdf'
-    }
-
-    const folderId = await createThreadFolder(threadData.snippet);
     
-    //Upload conversation pdf:
-    await uploadFile(folderId, conversationPdfToUpload.fileName, conversationPdfToUpload.filePath, conversationPdfToUpload.mimeType);
-
-    //Upload attachments, in Promise.all:
-    await Promise.all(attachmentsToUpload.map((attachment) => {
-        return uploadFile(folderId, attachment.fileName, attachment.filePath, attachment.mimeType);
-    }));
-
-
-    deleteThread(threadId);
-
-
-    finalizeThread(threadData, folderId);
-
-    return threadData;
+        const folderId = await createThreadFolder(threadData.snippet);
+        
+        //Upload conversation pdf:
+        await uploadFile(folderId, conversationPdfToUpload.fileName, conversationPdfToUpload.filePath, conversationPdfToUpload.mimeType);
+    
+        //Upload attachments, in Promise.all:
+        await Promise.all(attachmentsToUpload.map((attachment) => {
+            return uploadFile(folderId, attachment.fileName, attachment.filePath, attachment.mimeType);
+        }));
+        deleteThread(threadId);
+        finalizeThread(threadData, folderId);
+        return threadData;
+    } catch (error) {
+        errorThread(threadData, error);
+        throw Error(error);
+    }
 }
