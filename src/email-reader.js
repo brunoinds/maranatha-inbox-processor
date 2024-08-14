@@ -22,7 +22,7 @@ export async function getThreadsToProcess(){
 
         const threadsList = await gmail.users.threads.list({
             userId: userId,
-            maxResults: 60,
+            maxResults: 6,
             q: `` //has:attachment label:testes in:inbox
         });
 
@@ -119,6 +119,7 @@ export async function parseThread(threadId) {
         //Process messages
         for (const message of fullThread.data.messages) {
             const headers = message.payload.headers;
+            const subject = headers.find(header => header.name === 'Subject').value;
             const from = headers.find(header => header.name === 'From').value;
             const to = headers.find(header => header.name === 'To').value;
             const date = headers.find(header => header.name === 'Date').value;
@@ -175,11 +176,24 @@ export async function parseThread(threadId) {
                 attachments.push(attachmentDataInfo);
                 inboxItem.attachments.push(attachmentDataInfo);
             }
-            inboxItem.messages.push({ from, to, date, bodyHtml, attachments });
+            inboxItem.messages.push({ from, to, date, subject, bodyHtml, attachments });
         }
 
         if (inboxItem.messages.length > 0){
             inboxItem.date = inboxItem.messages[0].date;
+
+            const antlastMessage = (() => {
+                if (inboxItem.messages.length > 1){
+                    return inboxItem.messages[inboxItem.messages.length - 2];
+                }else{
+                    return inboxItem.messages[0];
+                }
+            })()
+
+            const antlastMessageDate = (new Date(antlastMessage.date)).getDate();
+            const antlastMessageDateDayPad = antlastMessageDate.toString().padStart(2, '0');
+
+            inboxItem.snippet = antlastMessageDateDayPad + " - " + inboxItem.messages[0].subject;
         }
 
         //Create an PDF file with all messages in thread, using puppeteer:
