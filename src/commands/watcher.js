@@ -58,5 +58,10 @@ const initiateWatcher = async () => {
     await searchForNewEmailsToProcess();
 }
 
+
 //Make a permanent process that every 1 minute, trigger an function:
-await initiateWatcher();
+//await initiateWatcher();
+
+
+console.log('Running script...');
+await searchForNewEmailsToProcess();
