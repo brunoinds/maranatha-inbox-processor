@@ -76,6 +76,11 @@ function saveSession(sessionData){
     fs.writeFileSync('secrets/session.json', JSON.stringify({...sessionData}));
 }
 export function getSession(){
+    if (!fs.existsSync('secrets/session.json')) {
+        throw new Error('❌ You need to login first.');
+    }
+
+
     return JSON.parse(fs.readFileSync('secrets/session.json'));
 }
 
