@@ -54,22 +54,14 @@ export async function uploadThread(threadId){
     const threadData = JSON.parse(fs.readFileSync(threadDataFilePath));
 
     try {
-        //Filter attachments that has the same fileName and size:
-        const repeatedAttachments = threadData.attachments.filter((attachment, index, self) => {
-            return index !== self.findIndex((t) => {
-                return t.fileName === attachment.fileName && t.size === attachment.size;
-            });
-        })
+        //remove duplicates (documents with same fileName, only last one will be uploaded):
+        const attachmentsWithoutDuplicates = threadData.attachments.filter((attachment, index, self) =>
+            index === self.findIndex((t) => (
+                t.fileName === attachment.fileName
+            ))
+        );
 
-        //Now, we only let the last attachment with the same fileName and size:
-        threadData.attachments = threadData.attachments.filter((attachment) => {
-            return !repeatedAttachments.some((t) => {
-                return t.fileName === attachment.fileName && t.size === attachment.size;
-            });
-        });
-
-
-        const attachmentsToUpload = threadData.attachments.map((attachment) => {
+        const attachmentsToUpload = attachmentsWithoutDuplicates.map((attachment) => {
             return {
                 fileName: attachment.fileName,
                 mimeType: attachment.mimeType,
