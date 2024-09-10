@@ -22,9 +22,10 @@ export async function getThreadsToProcess(){
 
         const threadsList = await gmail.users.threads.list({
             userId: userId,
-            maxResults: 60,
-            q: `` //has:attachment label:testes in:inbox
+            maxResults: 100,
+            q: `${toParseMessage}` //has:attachment label:testes in:inbox
         });
+
 
 
         // Step 2: Fetch full thread details for each thread
@@ -40,6 +41,7 @@ export async function getThreadsToProcess(){
                 snippet: fullThread.data.messages[0].snippet,
                 messages: []
             };
+
 
             //Process messages
             for (const message of fullThread.data.messages) {
@@ -76,7 +78,6 @@ export async function getThreadsToProcess(){
             })
             return correctAnswers.length > 0;
         });
-
 
         fs.mkdirSync(`threads`, { recursive: true });
         if (!fs.existsSync(`threads/threads.json`)){

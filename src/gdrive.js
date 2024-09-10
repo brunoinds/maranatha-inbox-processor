@@ -30,6 +30,7 @@ export async function uploadThread(threadId){
             parents: [folderId]
         };
 
+
         const media = {
             mimeType: mimeType,
             body: fs.createReadStream(filePath)
@@ -47,6 +48,7 @@ export async function uploadThread(threadId){
         const threadFolderPath = 'threads/' + threadId;
         fs.rmSync(threadFolderPath, { recursive: true });
     }
+
 
 
     //Upload file to folder:
